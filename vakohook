@@ -1,5 +1,4 @@
 do 
-    -- Загружаем твою старую библиотеку интерфейса
     local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/noowtf31-ui/Arcylic/refs/heads/main/src.lua.txt"))();
     local window = Library.new("🌭 ВАРЕНЫЕ КОЛБАСКИ HOOK 🌭", "MyHubConfigs");
     
@@ -13,7 +12,7 @@ do
     local Camera = workspace.CurrentCamera;
     local LocalPlayer = Players.LocalPlayer;
 
-    -- [ РАЗДЕЛЫ В ПАЦАНСКОМ СТИЛЕ ]
+    -- [ РАЗДЕЛЫ ]
     local VisualsSection = window:CreateSection("Палилово терпил");
     local ChamsTab = VisualsSection:CreateTab("Цветные лохи", "rbxassetid://10709819149");
     local ESPTab = VisualsSection:CreateTab("Квадраты и нитки", "rbxassetid://10709819149");
@@ -29,7 +28,7 @@ do
     local FreecamTab = MiscSection:CreateTab("Дух пацана (Фрикам)", "rbxassetid://10709819149");
     local PerformanceTab = MiscSection:CreateTab("Шустрый софт", "rbxassetid://10709819149");
 
-    -- Твои оригинальные настройки и функции (сохранены полностью)
+    -- [ НАСТРОЙКИ (ОРИГИНАЛЬНЫЕ) ]
     local aimbotEnabled = false;
     local aimbotSmoothing = 0.1;
     local aimbotFOV = 150;
@@ -42,49 +41,172 @@ do
     fovCircle.Visible = false;
     fovCircle.Color = Color3.fromRGB(255, 255, 255);
 
-    -- [ НАПОЛНЕНИЕ МЕНЮ ]
+    local bigHeadsEnabled = false;
+    local headSize = 1;
+    local headChamsEnabled = false;
+    local headChamsColor = Color3.fromRGB(255, 255, 255);
+    local headChamsOpacity = 0.5;
+
+    local chamsEnabled = false;
+    local chamsColor = Color3.fromRGB(255, 255, 255);
+    local chamsOpacity = 0.5;
+
+    local bagsEnabled = false;
+    local bagsColor = Color3.fromRGB(255, 255, 255);
+    local cratesEnabled = false;
+    local cratesColor = Color3.fromRGB(255, 255, 255);
+    local distEnabled = false;
+    local distSettings = {TextSize = 14, TextColor = Color3.fromRGB(255, 255, 255)};
+    local distRainbow = false;
+    local distHue = 0;
+
+    local crosshairEnabled = false;
+    local crosshairSize = 10;
+    local crosshairThickness = 1;
+    local crosshairColor = Color3.fromRGB(255, 255, 255);
+    local crosshairLines = {};
+
+    local freecamEnabled = false;
+    local freecamSpeed = 1;
+    local freecamCFrame = CFrame.new();
+
+    -- [ ФУНКЦИИ ЛОГИКИ ]
+    local function getClosestPlayerToCursor()
+        local closestPlayer = nil;
+        local shortestDistance = aimbotFOV;
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+                local pos, onScreen = Camera:WorldToViewportPoint(player.Character.Head.Position);
+                if onScreen then
+                    local distance = (Vector2.new(pos.X, pos.Y) - UserInputService:GetMouseLocation()).Magnitude;
+                    if distance < shortestDistance then
+                        closestPlayer = player.Character.Head;
+                        shortestDistance = distance;
+                    end
+                end
+            end
+        end
+        return closestPlayer;
+    end
+
+    local function createCrosshair()
+        for i = 1, 4 do
+            local line = Drawing.new("Line");
+            line.Visible = false;
+            line.Color = crosshairColor;
+            line.Thickness = crosshairThickness;
+            crosshairLines[i] = line;
+        end
+    end
+
+    local function updateCrosshair()
+        local center = UserInputService:GetMouseLocation();
+        if crosshairEnabled then
+            crosshairLines[1].From = center + Vector2.new(-crosshairSize, 0);
+            crosshairLines[1].To = center + Vector2.new(-2, 0);
+            crosshairLines[2].From = center + Vector2.new(crosshairSize, 0);
+            crosshairLines[2].To = center + Vector2.new(2, 0);
+            crosshairLines[3].From = center + Vector2.new(0, -crosshairSize);
+            crosshairLines[3].To = center + Vector2.new(0, -2);
+            crosshairLines[4].From = center + Vector2.new(0, crosshairSize);
+            crosshairLines[4].To = center + Vector2.new(0, 2);
+        end
+        for _, line in pairs(crosshairLines) do line.Visible = crosshairEnabled; end
+    end
+
+    local function toggleFreecam()
+        freecamEnabled = not freecamEnabled;
+        if freecamEnabled then
+            freecamCFrame = Camera.CFrame;
+        else
+            Camera.CameraType = Enum.CameraType.Custom;
+        end
+    end
+
+    createCrosshair();
+
+    -- [ ЗАПОЛНЕНИЕ ВКЛАДОК ]
     AimbotTab:CreateSection("Разборки | Самонаводка");
-    AimbotTab:CreateToggle({Name = "Врубить авто-попадание (ПКМ)", Default = false, Callback = function(v) aimbotEnabled = v end});
+    AimbotTab:CreateToggle({Name = "Врубить самонаводку (ПКМ)", Default = false, Callback = function(v) aimbotEnabled = v end});
     AimbotTab:CreateToggle({Name = "Показать зоркость (FOV)", Default = false, Callback = function(v) showFOV = v end});
     AimbotTab:CreateSlider({Name = "Радиус мацанья", Min = 10, Max = 800, Default = 150, Callback = function(v) aimbotFOV = v; fovCircle.Radius = v end});
-    AimbotTab:CreateSlider({Name = "Плавность (Чтобы не палили)", Min = 0.01, Max = 1, Default = 0.1, Precise = true, Callback = function(v) aimbotSmoothing = v end});
+    AimbotTab:CreateSlider({Name = "Плавность (Смуч)", Min = 0.01, Max = 1, Default = 0.1, Precise = true, Callback = function(v) aimbotSmoothing = v end});
 
-    HeadsTab:CreateSection("Разборки | Большие бошки");
+    HeadsTab:CreateSection("Разборки | Арбузы");
     HeadsTab:CreateToggle({Name = "Раздуть арбузы (Big Heads)", Default = false, Callback = function(v) bigHeadsEnabled = v; end});
     HeadsTab:CreateSlider({Name = "Размер дыни", Min = 1, Max = 9, Default = 1, Callback = function(v) headSize = v; end});
 
-    ESPTab:CreateSection("Палилово | Лут");
-    ESPTab:CreateToggle({Name = "Видеть сумки", Default = false, Callback = function(v) bagsEnabled = v; end});
-    ESPTab:CreateToggle({Name = "Ящики с хабаром", Default = false, Callback = function(v) cratesEnabled = v; end});
-    ESPTab:CreateToggle({Name = "Дистанция до чушпанов", Default = false, Callback = function(v) distEnabled = v; end});
-
-    PerformanceTab:CreateSection("Шустрый софт | Оптимизация");
-    PerformanceTab:CreateToggle({Name = "Разогнать облака", Default = false, Callback = function(v) --[[ логика удаления облаков ]] end});
-    PerformanceTab:CreateToggle({Name = "Вырвать траву (FPS Boost)", Default = false, Callback = function(v) --[[ логика удаления травы ]] end});
-    PerformanceTab:CreateToggle({Name = "Убрать листья", Default = false, Callback = function(v) --[[ логика удаления листьев ]] end});
+    ChamsTab:CreateSection("Палилово | Цветные");
+    ChamsTab:CreateToggle({Name = "Подсветить лохов (Chams)", Default = false, Callback = function(v) chamsEnabled = v; end});
+    ChamsTab:CreateColorpicker({Name = "Цвет терпил", Default = Color3.fromRGB(255, 255, 255), Callback = function(v) chamsColor = v; end});
 
     WorldTab:CreateSection("Мутки | Мир");
     WorldTab:CreateToggle({Name = "Фонарик в глаза (Fullbright)", Default = false, Callback = function(v) _G.FullBrightEnabled = v; end});
-    
-    FreecamTab:CreateSection("Приколюхи | Свободный полет");
-    FreecamTab:CreateToggle({Name = "Врубить духа пацана", Default = false, Callback = function(v) freecamEnabled = v; end});
+
+    PerformanceTab:CreateSection("Шустрый софт | FPS");
+    PerformanceTab:CreateToggle({Name = "Разогнать облака", Default = false, Callback = function(v) for _, o in pairs(Workspace:GetDescendants()) do if o:IsA("Cloud") then o.Enabled = not v end end end});
+    PerformanceTab:CreateToggle({Name = "Вырвать траву", Default = false, Callback = function(v) sethiddenproperty(Workspace.Terrain, "Decoration", not v) end});
+
+    FreecamTab:CreateSection("Приколюхи | Полет");
+    FreecamTab:CreateToggle({Name = "Дух пацана (Freecam)", Default = false, Callback = function(v) freecamEnabled = v; end});
     FreecamTab:CreateKeybind({Name = "Кнопка полета", Default = Enum.KeyCode.K, Callback = function() toggleFreecam(); end});
 
-    -- [ ТУТ ИДЕТ ВСЯ ТВОЯ ЛОГИКА ОБНОВЛЕНИЯ (RenderStepped, Heartbeat и т.д.) ]
-    -- Я её не менял, чтобы всё работало как в оригинале [cite: 343, 353]
-    
-    RunService.RenderStepped:Connect(function(dt)
+    -- [ ЦИКЛ ОБНОВЛЕНИЯ ]
+    RunService.Heartbeat:Connect(function(deltaTime)
         if aimbotEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
             local target = getClosestPlayerToCursor();
             if target then
                 local tPos = Camera:WorldToViewportPoint(target.Position);
-                local mPos = Camera.ViewportSize / 2;
+                local mPos = UserInputService:GetMouseLocation();
                 mousemoverel((tPos.X - mPos.X) * aimbotSmoothing, (tPos.Y - mPos.Y) * aimbotSmoothing);
             end
         end
+        
         fovCircle.Visible = showFOV;
-        fovCircle.Position = Camera.ViewportSize / 2;
+        fovCircle.Position = UserInputService:GetMouseLocation();
+        
+        if _G.FullBrightEnabled then
+            Lighting.Brightness = 2;
+            Lighting.ClockTime = 14;
+            Lighting.FogEnd = 100000;
+            Lighting.GlobalShadows = false;
+        end
+
+        if freecamEnabled then
+            Camera.CameraType = Enum.CameraType.Scriptable;
+            local moveDir = Vector3.new();
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + Camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - Camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - Camera.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + Camera.CFrame.RightVector end
+            freecamCFrame = freecamCFrame + (moveDir * freecamSpeed);
+            Camera.CFrame = freecamCFrame;
+        end
+
+        updateCrosshair();
+        
+        -- Логика для Big Heads и Chams
+        for _, model in pairs(CollectionService:GetTagged("ChamsTarget")) do
+            local head = model:FindFirstChild("Head");
+            if head then
+                head.Size = (bigHeadsEnabled and Vector3.new(headSize, headSize, headSize)) or Vector3.new(1.2, 1.2, 1.2);
+                head.CanCollide = not bigHeadsEnabled;
+            end
+            
+            local uHL = model:FindFirstChild("UniversalCham");
+            if chamsEnabled then
+                if not uHL then
+                    uHL = Instance.new("Highlight", model);
+                    uHL.Name = "UniversalCham";
+                    uHL.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop;
+                end
+                uHL.FillColor = chamsColor;
+                uHL.FillTransparency = 1 - chamsOpacity;
+            elseif uHL then
+                uHL:Destroy();
+            end
+        end
     end);
-    
-    -- ... (остальной твой оригинальный код обновлений из файла)
+
+    print("🌭 Вареные Колбаски Hook загружены! Чоткого рейда, пацаны.");
 end
