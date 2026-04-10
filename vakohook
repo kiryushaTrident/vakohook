@@ -1,266 +1,118 @@
-do 
-    local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/noowtf31-ui/Arcylic/refs/heads/main/src.lua.txt"))();
-    local window = Library.new("Варенные колбаски hOoK", "MyHubConfigs");
-    
-    local Workspace = game:GetService("Workspace");
-    local RunService = game:GetService("RunService");
-    local CollectionService = game:GetService("CollectionService");
-    local Lighting = game:GetService("Lighting");
-    local Players = game:GetService("Players");
-    local CoreGui = game:GetService("CoreGui");
-    local UserInputService = game:GetService("UserInputService");
-    local Camera = workspace.CurrentCamera;
-    local LocalPlayer = Players.LocalPlayer;
+-- [[ ВАРЕНЫЕ КОЛБАСКИ HOOK v1.0 | Trident Survival ]] --
+-- [[ ЧИСТО ДЛЯ ПАЦАНОВ С РАЁНА ]] --
 
-    -- [ РАЗДЕЛЫ ]
-    local VisualsSection = window:CreateSection("Visuals");
-    local ChamsTab = VisualsSection:CreateTab("Chams", "rbxassetid://10709819149");
-    local ESPTab = VisualsSection:CreateTab("ESP", "rbxassetid://10709819149");
-    local WorldTab = VisualsSection:CreateTab("World", "rbxassetid://10709819149");
-    local CrosshairTab = VisualsSection:CreateTab("Crosshair", "rbxassetid://10709819149");
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-    local CombatSection = window:CreateSection("Combat");
-    local AimbotTab = CombatSection:CreateTab("Aimbot", "rbxassetid://10709819149"); -- Новая вкладка
-    local HeadsTab = CombatSection:CreateTab("Heads", "rbxassetid://10709819149");
+local Window = Rayfield:CreateWindow({
+   Name = "🌭 ВАРЕНЫЕ КОЛБАСКИ HOOK 🌭",
+   LoadingTitle = "Греем колбаски...",
+   LoadingSubtitle = "от Кирюши для пацанов",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "VakohookData",
+      FileName = "PatsanCfg"
+   }
+})
 
-    local MiscSection = window:CreateSection("Miscellaneous");
-    local ZoomTab = MiscSection:CreateTab("Zoom", "rbxassetid://10709819149");
-    local FreecamTab = MiscSection:CreateTab("Freecam", "rbxassetid://10709819149");
-    local PerformanceTab = MiscSection:CreateTab("Performance", "rbxassetid://10709819149");
+-- Вкладка со стрельбой
+local AimTab = Window:CreateTab("🎯 Стрелялка чоткая", 4483345998)
 
-    ChamsTab:CreateSection("Visuals | Chams");
-    ESPTab:CreateSection("Visuals | ESP");
-    WorldTab:CreateSection("Visuals | World");
-    CrosshairTab:CreateSection("Visuals | Crosshair");
-    AimbotTab:CreateSection("Combat | Aimbot");
-    HeadsTab:CreateSection("Combat | Heads");
-    ZoomTab:CreateSection("Miscellaneous | Zoom");
-    FreecamTab:CreateSection("Miscellaneous | Freecam");
-    PerformanceTab:CreateSection("Miscellaneous | Performance");
+AimTab:CreateToggle({
+   Name = "Врубить самонаводку на лоха (Aimbot)",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.AimEnabled = Value
+   end,
+})
 
-    -- [ ПЕРЕМЕННЫЕ АИМБОТА ]
-    local aimbotEnabled = false;
-    local aimbotSmoothing = 0.1;
-    local aimbotFOV = 150;
-    local showFOV = false;
-    local fovCircle = Drawing.new("Circle");
-    fovCircle.Thickness = 1;
-    fovCircle.NumSides = 64;
-    fovCircle.Radius = aimbotFOV;
-    fovCircle.Filled = false;
-    fovCircle.Visible = false;
-    fovCircle.Color = Color3.fromRGB(255, 255, 255);
+AimTab:CreateSlider({
+   Name = "Зоркость пацанская (FOV)",
+   Range = {0, 500},
+   Increment = 10,
+   Suffix = " пикселей",
+   CurrentValue = 100,
+   Callback = function(Value)
+      _G.AimFOV = Value
+   end,
+})
 
-    -- [ ТВОИ ОРИГИНАЛЬНЫЕ ПЕРЕМЕННЫЕ ]
-    local freecamEnabled = false;
-    local freecamKeybind = Enum.KeyCode.K;
-    local freecamFlySpeed = 1;
-    local isFreecamActive = false;
-    local cameraPos = Vector3.new(0, 10, 0);
-    local yaw = 0;
-    local pitch = 0;
-    local sprintMultiplier = 2.5;
-    local sensitivity = 0.4;
-    local zoomEnabled = false;
-    local zoomKeybind = Enum.KeyCode.C;
-    local zoomDistance = 20;
-    local isZooming = false;
-    local skyboxEnabled = false;
-    local selectedSkybox = "SpongeBob Sky";
-    local originalSkyData = {};
-    local Skyboxes = {["Purple Nebula"] = {Bk = "rbxassetid://159454299", Dn = "rbxassetid://159454296", Ft = "rbxassetid://159454293", Lf = "rbxassetid://159454286", Rt = "rbxassetid://159454300", Up = "rbxassetid://159454288"}, Minecraft = {Bk = "rbxassetid://1876545003", Dn = "rbxassetid://1876544331", Ft = "rbxassetid://1876542941", Lf = "rbxassetid://1876543392", Rt = "rbxassetid://1876543764", Up = "rbxassetid://1876544642"}, ["Night Sky"] = {Bk = "rbxassetid://12064107", Dn = "rbxassetid://12064152", Ft = "rbxassetid://12064121", Lf = "rbxassetid://12063984", Rt = "rbxassetid://12064115", Up = "rbxassetid://12064131"}, ["SpongeBob Sky"] = {Bk = "rbxassetid://10287764626", Dn = "rbxassetid://10287766382", Ft = "rbxassetid://10287764626", Lf = "rbxassetid://10287763421", Rt = "rbxassetid://10287764626", Up = "rbxassetid://10287767597"}, ["Purple Sky"] = {Bk = "rbxassetid://17103618635", Dn = "rbxassetid://17103622190", Ft = "rbxassetid://17103624898", Lf = "rbxassetid://17103628153", Rt = "rbxassetid://17103636666", Up = "rbxassetid://17103639457"}, ["Pink Sky"] = {Bk = "rbxassetid://271042516", Dn = "rbxassetid://271077243", Ft = "rbxassetid://271042556", Lf = "rbxassetid://271042310", Rt = "rbxassetid://271042467", Up = "rbxassetid://271077958"}};
-    local oreSettings = {Enabled = false, FillOpacity = 0.5, OutlineOpacity = 0, OutlineColor = Color3.fromRGB(255, 255, 255)};
-    local activeOres = {};
-    local OreConfigs = {["Nitrate Ore"] = {FillColor = Color3.fromRGB(255, 255, 255), Part1Color = Color3.fromRGB(248, 248, 248), Part2Color = Color3.fromRGB(72, 72, 72), TextureID = "rbxassetid://12939036056"}, ["Iron Ore"] = {FillColor = Color3.fromRGB(255, 255, 0), Part1Color = Color3.fromRGB(199, 172, 120), Part2Color = Color3.fromRGB(72, 72, 72), TextureID = "rbxassetid://12939036056"}, Cobblestone = {FillColor = Color3.fromRGB(50, 50, 50), Part1Color = Color3.fromRGB(72, 72, 72), TextureID = "rbxassetid://12939036056"}};
-    local handsEnabled, handRainbow, handHue = false, false, 0;
-    local sleeveEnabled, sleeveRainbow, sleeveHue = false, false, 0;
-    local materialList = {"SmoothPlastic", "Neon", "ForceField", "Glass", "Metal", "Wood", "Brick", "Fabric", "Granite", "Concrete"};
-    local armSettings = {Hand = {Color = Color3.fromRGB(0, 59, 143), Material = Enum.Material.SmoothPlastic, Opacity = 0}, Sleeve = {Color = Color3.fromRGB(163, 162, 165), Material = Enum.Material.Fabric, Opacity = 0}};
-    local cratesEnabled = false;
-    local crateRainbowEnabled = false;
-    local crateCurrentHue = 0;
-    local activeCrates = {};
-    local CrateSettings = {FillColor = Color3.fromRGB(0, 255, 127), FillTransparency = 0.5, OutlineColor = Color3.fromRGB(255, 255, 255), OutlineTransparency = 0};
-    local ChamStorage = CoreGui:FindFirstChild("TridentVisuals") or Instance.new("Folder");
-    ChamStorage.Name = "TridentVisuals";
-    ChamStorage.Parent = CoreGui;
-    local colorsEnabled = false;
-    local colorSettings = {Brightness = 0, Contrast = 0, Saturation = 0, TintColor = Color3.fromRGB(255, 255, 255)};
-    local distEnabled = false;
-    local distRainbow = false;
-    local distHue = 0;
-    local distSettings = {TextColor = Color3.fromRGB(255, 255, 255), TextSize = 18, TextOpacity = 1, Font = Enum.Font.RobotoMono, ShowStudsText = true};
-    local bagsEnabled = false;
-    local bagRainbowEnabled = false;
-    local bagCurrentHue = 0;
-    local activeBags = {};
-    local BagSettings = {FillColor = Color3.fromRGB(0, 255, 255), OutlineColor = Color3.fromRGB(255, 255, 255), FillTransparency = 0.5, OutlineTransparency = 0};
-    local fovEnabled = false;
-    local TARGET_FOV = 80;
-    local originalFOV = Camera.FieldOfView;
-    local chamsEnabled, rainbowEnabled, chamsOpacity, currentHue = false, false, 0.5, 0;
-    local chamsColor = Color3.fromRGB(255, 0, 0);
-    local bigHeadsEnabled = false;
-    local headSize = 1;
-    local headChamsEnabled = false;
-    local headRainbowEnabled = false;
-    local headChamsOpacity = 0.5;
-    local headCurrentHue = 0;
-    local headChamsColor = Color3.fromRGB(0, 255, 0);
-    local crosshairEnabled, crosshairRainbow, crosshairHue = false, false, 0;
-    local crosshairSettings = {color = Color3.fromRGB(255, 255, 255), thickness = 2, length = 8, opacity = 1, x_offset = 0, y_offset = 0};
-    _G.FullBrightEnabled = false;
+AimTab:CreateToggle({
+   Name = "Спрятать круг (Hidden FOV)",
+   CurrentValue = true,
+   Callback = function(Value)
+      _G.HideFOV = Value -- Твоя фишка для видео без мыла и палева
+   end,
+})
 
-    -- [ ФУНКЦИИ ]
-    local function getClosestPlayerToCursor()
-        local target, closest = nil, aimbotFOV;
-        for _, model in pairs(CollectionService:GetTagged("ChamsTarget")) do
-            local head = model:FindFirstChild("Head");
-            if head then
-                local pos, onScreen = Camera:WorldToViewportPoint(head.Position);
-                if onScreen then
-                    local dist = (Vector2.new(pos.X, pos.Y) - (Camera.ViewportSize / 2)).Magnitude;
-                    if dist < closest then
-                        closest = dist;
-                        target = head;
-                    end
-                end
-            end
-        end
-        return target;
-    end
+AimTab:CreateSlider({
+   Name = "Чтобы не палиться (Smoothing)",
+   Range = {1, 20},
+   Increment = 1,
+   Suffix = " плавность",
+   CurrentValue = 5,
+   Callback = function(Value)
+      _G.AimSmooth = Value
+   end,
+})
 
-    local function toggleFreecam() if not freecamEnabled then return; end isFreecamActive = not isFreecamActive; if isFreecamActive then local lookVector = Camera.CFrame.LookVector; cameraPos = Camera.CFrame.Position; yaw = math.atan2(-lookVector.X, -lookVector.Z); pitch = math.asin(lookVector.Y); Camera.CameraType = Enum.CameraType.Scriptable; UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter; else Camera.CameraType = Enum.CameraType.Custom; UserInputService.MouseBehavior = Enum.MouseBehavior.Default; end end 
-    local function updateSkybox() local Sky = Lighting:FindFirstChildOfClass("Sky"); if not Sky then Sky = Instance.new("Sky"); Sky.Parent = Lighting; end if skyboxEnabled then if not originalSkyData.Bk then originalSkyData = {Bk = Sky.SkyboxBk, Dn = Sky.SkyboxDn, Ft = Sky.SkyboxFt, Lf = Sky.SkyboxLf, Rt = Sky.SkyboxRt, Up = Sky.SkyboxUp}; end local Selection = Skyboxes[selectedSkybox]; if Selection then Sky.SkyboxBk = Selection.Bk; Sky.SkyboxDn = Selection.Dn; Sky.SkyboxFt = Selection.Ft; Sky.SkyboxLf = Selection.Lf; Sky.SkyboxRt = Selection.Rt; Sky.SkyboxUp = Selection.Up; end elseif originalSkyData.Bk then Sky.SkyboxBk = originalSkyData.Bk; Sky.SkyboxDn = originalSkyData.Dn; Sky.SkyboxFt = originalSkyData.Ft; Sky.SkyboxLf = originalSkyData.Lf; Sky.SkyboxRt = originalSkyData.Rt; Sky.SkyboxUp = originalSkyData.Up; end end 
-    local function updateStimEffect() local stim = Lighting:FindFirstChild("StimEffect"); if stim then stim.Enabled = colorsEnabled; if colorsEnabled then stim.Brightness = colorSettings.Brightness; stim.Contrast = colorSettings.Contrast; stim.Saturation = colorSettings.Saturation; stim.TintColor = colorSettings.TintColor; end end end 
-    local lineX = Drawing.new("Line"); local lineY = Drawing.new("Line");
-    local function updateCrosshair() local center = Camera.ViewportSize / 2; lineX.Visible = crosshairEnabled; lineX.Color = crosshairSettings.color; lineX.Thickness = crosshairSettings.thickness; lineX.Transparency = crosshairSettings.opacity; lineX.From = Vector2.new((center.X - crosshairSettings.x_offset) - crosshairSettings.length, center.Y - crosshairSettings.y_offset); lineX.To = Vector2.new((center.X - crosshairSettings.x_offset) + crosshairSettings.length, center.Y - crosshairSettings.y_offset); lineY.Visible = crosshairEnabled; lineY.Color = crosshairSettings.color; lineY.Thickness = crosshairSettings.thickness; lineY.Transparency = crosshairSettings.opacity; lineY.From = Vector2.new(center.X - crosshairSettings.x_offset, (center.Y - crosshairSettings.y_offset) - crosshairSettings.length); lineY.To = Vector2.new(center.X - crosshairSettings.x_offset, (center.Y - crosshairSettings.y_offset) + crosshairSettings.length); end 
-    local function getMyPos() local success, pos = pcall(function() local ignoreFolder = workspace:FindFirstChild("Const") and workspace.Const:FindFirstChild("Ignore"); local localChar = ignoreFolder and ignoreFolder:FindFirstChild("LocalCharacter"); if localChar then local reference = localChar:FindFirstChild("Middle") or localChar:FindFirstChild("Top"); if reference then return reference.Position; end end return nil; end); return (success and pos) or nil; end 
-    local function tagModel(model) if (model:IsA("Model") and model:FindFirstChild("HumanoidRootPart")) then if not CollectionService:HasTag(model, "ChamsTarget") then CollectionService:AddTag(model, "ChamsTarget"); end end end 
-    for _, obj in ipairs(Workspace:GetChildren()) do tagModel(obj); end Workspace.ChildAdded:Connect(tagModel);
-    local function IdentifyOre(model) if (model.Name ~= "Model") then return nil; end local children = model:GetChildren(); for _, configName in pairs({"Nitrate Ore", "Iron Ore", "Cobblestone"}) do local config = OreConfigs[configName]; local p1Match = false; local p2Match = configName == "Cobblestone"; for _, child in pairs(children) do if (child:IsA("MeshPart") or child:IsA("Part")) then local idMatch = (child:IsA("MeshPart") and (child.MeshId == config.TextureID)) or true; if (idMatch and (child.Color == config.Part1Color)) then p1Match = true; elseif (idMatch and config.Part2Color and (child.Color == config.Part2Color)) then p2Match = true; end end end if (p1Match and p2Match) then return config; end end return nil; end 
-    local function ApplyOreCham(model, config) local highlight = model:FindFirstChild("OreHighlight"); if not highlight then highlight = Instance.new("Highlight"); highlight.Name = "OreHighlight"; highlight.Adornee = model; highlight.Parent = model; end highlight.Enabled = oreSettings.Enabled; highlight.FillColor = config.FillColor; highlight.FillTransparency = 1 - oreSettings.FillOpacity; highlight.OutlineColor = oreSettings.OutlineColor; highlight.OutlineTransparency = oreSettings.OutlineOpacity; activeOres[model] = highlight; end 
-    local function checkAndAddOre(model) if not model:IsA("Model") then return; end task.delay(0.5, function() if (not model or not model.Parent) then return; end local oreConfig = IdentifyOre(model); if oreConfig then ApplyOreCham(model, oreConfig); end end); end 
-    local function isTargetCrate(model) if not model:IsA("Model") then return false; end if ((model.Name == "InteriorContainer") or model:FindFirstChild("Container-WithDoor") or model:FindFirstChild("State") or model.Name:find("MO-fence") or (LocalPlayer.Character and model:IsDescendantOf(LocalPlayer.Character))) then return false; end local children = {}; for _, child in pairs(model:GetChildren()) do children[child.Name] = true; end return (children['Bottom'] and children['Top']) or (children['Body'] and children['Wheel']) or (children['box'] and children['trash']) or (children['Dispenser'] and children['Machine']); end 
-    local function applyCrateCham(model) if isTargetCrate(model) then local id = model:GetDebugId(); local highlight = ChamStorage:FindFirstChild(id); if not highlight then highlight = Instance.new("Highlight"); highlight.Name = id; highlight.Adornee = model; highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop; highlight.Parent = ChamStorage; end highlight.Enabled = cratesEnabled; highlight.FillColor = CrateSettings.FillColor; highlight.FillTransparency = CrateSettings.FillTransparency; highlight.OutlineColor = CrateSettings.OutlineColor; highlight.OutlineTransparency = CrateSettings.OutlineTransparency; activeCrates[model] = highlight; end end 
-    local function refreshAllCrates() for _, hl in pairs(activeCrates) do if hl then hl.Enabled = cratesEnabled; end end end 
-    local function createDistanceTag(model) local enemyRoot = model:WaitForChild("HumanoidRootPart", 5) or model:WaitForChild("Torso", 5); if (not enemyRoot or (model == LocalPlayer.Character)) then return; end if model:FindFirstChild("DistanceESP") then model.DistanceESP:Destroy(); end local bbg = Instance.new("BillboardGui"); bbg.Name = "DistanceESP"; bbg.Adornee = enemyRoot; bbg.Size = UDim2.new(0, 150, 0, 50); bbg.AlwaysOnTop = true; bbg.StudsOffset = Vector3.new(0, -3.5, 0); bbg.Parent = model; local label = Instance.new("TextLabel"); label.Name = "Label"; label.BackgroundTransparency = 1; label.Size = UDim2.new(1, 0, 1, 0); label.TextColor3 = distSettings.TextColor; label.TextTransparency = 1 - distSettings.TextOpacity; label.TextSize = distSettings.TextSize; label.Font = distSettings.Font; label.TextStrokeTransparency = 0; label.Text = ""; label.Parent = bbg; task.spawn(function() while bbg.Parent do if distEnabled then bbg.Enabled = true; local myPos = getMyPos(); if myPos then local dist = (myPos - enemyRoot.Position).Magnitude; label.Text = math.floor(dist) .. ((distSettings.ShowStudsText and " Studs") or ""); label.TextColor3 = distSettings.TextColor; label.TextSize = distSettings.TextSize; label.TextTransparency = 1 - distSettings.TextOpacity; end else bbg.Enabled = false; end task.wait(0.1); end end); end 
-    local function isTargetBag(model) if ((model.Name == "Model") and (#model:GetChildren() == 2)) then local p1 = model:FindFirstChild("Part"); if (p1 and p1:IsA("BasePart")) then local s = p1.Size; if ((s.Y < 3) and (s.X < 3) and (s.Z < 3)) then return true; end end end return false; end 
-    local function updateBagProperties(hl) if hl then hl.Enabled = bagsEnabled; hl.FillColor = BagSettings.FillColor; hl.FillTransparency = BagSettings.FillTransparency; hl.OutlineColor = BagSettings.OutlineColor; hl.OutlineTransparency = BagSettings.OutlineTransparency; end end 
-    local function applyHighlight(model) if isTargetBag(model) then task.defer(function() if not model:IsDescendantOf(Workspace) then return; end local highlight = model:FindFirstChild("BagHighlight"); if not highlight then highlight = Instance.new("Highlight"); highlight.Name = "BagHighlight"; highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop; highlight.Parent = model; model.AncestryChanged:Connect(function(_, parent) if not parent then activeBags[model] = nil; end end); end activeBags[model] = highlight; updateBagProperties(highlight); end); end end 
+-- Вкладка с ВХ
+local VisualsTab = Window:CreateTab("👁️ Палилово терпил", 4483345998)
 
-    -- [ UI НАПОЛНЕНИЕ ]
-    -- Aimbot Tab
-    AimbotTab:CreateToggle({Name = "Enable Aimbot (Hold RMB)", Default = false, Callback = function(v) aimbotEnabled = v end});
-    AimbotTab:CreateToggle({Name = "Show FOV Circle", Default = false, Callback = function(v) showFOV = v end});
-    AimbotTab:CreateSlider({Name = "FOV Radius", Min = 10, Max = 800, Default = 150, Callback = function(v) aimbotFOV = v; fovCircle.Radius = v end});
-    AimbotTab:CreateSlider({Name = "Smoothing", Min = 0.01, Max = 1, Default = 0.1, Precise = true, Callback = function(v) aimbotSmoothing = v end});
+VisualsTab:CreateToggle({
+   Name = "Квадраты вокруг чушпанов (Boxes)",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.EspBoxes = Value
+   end,
+})
 
-    -- Остальной твой UI без изменений
-    ESPTab:CreateToggle({Name = "Bags", Default = false, Callback = function(v) bagsEnabled = v; refreshAllBags(); end});
-    ESPTab:CreateToggle({Name = "Rainbow Mode", Default = false, Callback = function(v) bagRainbowEnabled = v; end});
-    ESPTab:CreateColorPicker({Name = "Bag Color", Default = Color3.fromRGB(0, 255, 255), Callback = function(color) BagSettings.FillColor = color; if not bagRainbowEnabled then for _, hl in pairs(activeBags) do hl.FillColor = color; end end end});
-    ESPTab:CreateSlider({Name = "Opacity", Min = 0, Max = 100, Default = 50, Callback = function(v) local trans = 1 - (v / 100); BagSettings.FillTransparency = trans; for _, hl in pairs(activeBags) do hl.FillTransparency = trans; end end});
-    ESPTab:CreateSection("Visuals | Crates");
-    ESPTab:CreateToggle({Name = "Crates", Default = false, Callback = function(v) cratesEnabled = v; refreshAllCrates(); end});
-    ESPTab:CreateToggle({Name = "Rainbow Mode", Default = false, Callback = function(v) crateRainbowEnabled = v; end});
-    ESPTab:CreateColorPicker({Name = "Crate Color", Default = Color3.fromRGB(0, 255, 127), Callback = function(color) CrateSettings.FillColor = color; if not crateRainbowEnabled then for _, hl in pairs(activeCrates) do hl.FillColor = color; end end end});
-    ESPTab:CreateSlider({Name = "Opacity", Min = 0, Max = 100, Default = 50, Callback = function(v) local trans = 1 - (v / 100); CrateSettings.FillTransparency = trans; for _, hl in pairs(activeCrates) do hl.FillTransparency = trans; end end});
-    ESPTab:CreateSection("Visuals | Distance");
-    ESPTab:CreateToggle({Name = "Distance", Default = false, Callback = function(v) distEnabled = v; end});
-    ESPTab:CreateToggle({Name = "Rainbow Mode", Default = false, Callback = function(v) distRainbow = v; end});
-    ESPTab:CreateColorPicker({Name = "Text Color", Default = Color3.fromRGB(255, 255, 255), Callback = function(color) distSettings.TextColor = color; end});
-    ESPTab:CreateSlider({Name = "Opacity", Min = 0, Max = 100, Default = 100, Callback = function(v) distSettings.TextOpacity = v / 100; end});
-    ESPTab:CreateSlider({Name = "Size", Min = 10, Max = 50, Default = 18, Callback = function(v) distSettings.TextSize = v; end});
-    ESPTab:CreateSection("Visuals | Ores");
-    ESPTab:CreateToggle({Name = "Ore Chams", Default = false, Callback = function(v) oreSettings.Enabled = v; refreshAllOres(); end});
-    ESPTab:CreateSlider({Name = "Opacity", Min = 0, Max = 100, Default = 50, Callback = function(v) oreSettings.FillOpacity = v / 100; refreshAllOres(); end});
-    ZoomTab:CreateToggle({Name = "Enable Zoom", Default = false, Callback = function(v) zoomEnabled = v; end});
-    ZoomTab:CreateKeybind({Name = "Keybind", Default = Enum.KeyCode.C, Callback = function() isZooming = not isZooming; end});
-    ZoomTab:CreateSlider({Name = "Zoom distance", Min = 1, Max = 120, Default = 20, Precise = true, Callback = function(v) zoomDistance = v; end});
-    FreecamTab:CreateToggle({Name = "Enable Freecam", Default = false, Callback = function(v) freecamEnabled = v; if (not v and isFreecamActive) then toggleFreecam(); end end});
-    FreecamTab:CreateKeybind({Name = "Keybind", Default = Enum.KeyCode.K, Callback = function() toggleFreecam(); end});
-    FreecamTab:CreateSlider({Name = "Freecam speed", Min = 0.1, Max = 10, Default = 1, Precise = true, Callback = function(v) freecamFlySpeed = v; end});
-    PerformanceTab:CreateToggle({Name = "Remove Clouds", Default = false, Callback = function(v) if v then local terrain = workspace.Terrain; local clouds = terrain:FindFirstChildOfClass("Clouds") or terrain:FindFirstChild("Clouds"); if clouds then clouds:Destroy(); end end end});
-    PerformanceTab:CreateToggle({Name = "Remove Leaves", Default = false, Callback = function(v) if v then local namesToRemove = {"Elm1_Leaves", "Fir3_Leaves", "Birch1_Leaves", "Palm1_Leaves"}; for _, object in ipairs(workspace:GetDescendants()) do for _, name in ipairs(namesToRemove) do if (object.Name == name) then object:Destroy(); end end end end end});
-    PerformanceTab:CreateToggle({Name = "Remove Grass", Default = false, Callback = function(v) if v then if not game:IsLoaded() then repeat task.wait(); until game:IsLoaded() end coroutine.wrap(pcall)(function() local terrain = workspace:FindFirstChildOfClass("Terrain"); if not terrain then repeat task.wait(); until workspace:FindFirstChildOfClass("Terrain") terrain = workspace:FindFirstChildOfClass("Terrain"); end if sethiddenproperty then sethiddenproperty(terrain, "Decoration", false); else warn("Your exploit does not support sethiddenproperty, please use a different exploit."); end if _G.ConsoleLogs then warn("Decorations Disabled"); end end); end end});
-    PerformanceTab:CreateToggle({Name = "Water Optimization", Default = false, Callback = function(v) if v then local terrain = workspace.Terrain; terrain.WaterColor = Color3.fromRGB(33, 233, 255); terrain.WaterTransparency = 0.25; terrain.WaterReflectance = 0; terrain.WaterWaveSize = 0; terrain.WaterWaveSpeed = 0; terrain.Material = Enum.Material.Plastic; end end});
-    PerformanceTab:CreateToggle({Name = "Enable FlatTextures", Default = false, Callback = function(val) if val then local ToDisable = {Textures = true, VisualEffects = true, Parts = true, Particles = true, Sky = true}; local Stuff = {}; for _, v in next, game:GetDescendants() do if ToDisable.Parts then if (v:IsA("Part") or v:IsA("Union") or v:IsA("BasePart")) then v.Material = Enum.Material.SmoothPlastic; table.insert(Stuff, 1, v); end end if ToDisable.Particles then if (v:IsA("ParticleEmitter") or v:IsA("Smoke") or v:IsA("Explosion") or v:IsA("Sparkles") or v:IsA("Fire")) then v.Enabled = false; table.insert(Stuff, 1, v); end end if ToDisable.VisualEffects then if (v:IsA("BloomEffect") or v:IsA("BlurEffect") or v:IsA("DepthOfFieldEffect") or v:IsA("SunRaysEffect")) then v.Enabled = false; table.insert(Stuff, 1, v); end end if ToDisable.Textures then if (v:IsA("Decal") or v:IsA("Texture")) then v.Texture = ""; table.insert(Stuff, 1, v); end end if ToDisable.Sky then if v:IsA("Sky") then v.Parent = nil; table.insert(Stuff, 1, v); end end end end end});
-    WorldTab:CreateToggle({Name = "Fullbright", Default = false, Callback = function(v) _G.FullBrightEnabled = v; end});
-    WorldTab:CreateToggle({Name = "Enable FOV", Default = false, Callback = function(v) fovEnabled = v; if v then RunService:BindToRenderStep("FOVLock", 201, function() if (not (zoomEnabled and isZooming) and not isFreecamActive) then Camera.FieldOfView = TARGET_FOV; end end); else RunService:UnbindFromRenderStep("FOVLock"); Camera.FieldOfView = originalFOV; end end});
-    WorldTab:CreateSlider({Name = "Field of View", Min = 30, Max = 120, Default = 80, Callback = function(v) TARGET_FOV = v; end});
-    WorldTab:CreateSection("Visuals | Skybox");
-    WorldTab:CreateToggle({Name = "Enable Skybox", Default = false, Callback = function(v) skyboxEnabled = v; updateSkybox(); end});
-    WorldTab:CreateDropdown({Name = "Select Skybox", Options = {"Purple Nebula", "Minecraft", "Night Sky", "SpongeBob Sky", "Purple Sky", "Pink Sky"}, Default = "SpongeBob Sky", Callback = function(v) selectedSkybox = v; if skyboxEnabled then updateSkybox(); end end});
-    WorldTab:CreateSection("Visuals | Colors");
-    WorldTab:CreateToggle({Name = "Enable Colors", Default = false, Callback = function(v) colorsEnabled = v; updateStimEffect(); end});
-    WorldTab:CreateSlider({Name = "Brightness", Min = 0, Max = 50, Default = 0, Precise = true, Callback = function(v) colorSettings.Brightness = v; updateStimEffect(); end});
-    WorldTab:CreateSlider({Name = "Contrast", Min = 0, Max = 50, Default = 0, Precise = true, Callback = function(v) colorSettings.Contrast = v; updateStimEffect(); end});
-    WorldTab:CreateSlider({Name = "Saturation", Min = 0, Max = 50, Default = 0, Precise = true, Callback = function(v) colorSettings.Saturation = v; updateStimEffect(); end});
-    WorldTab:CreateSection("Visuals | Hands");
-    WorldTab:CreateToggle({Name = "Hand", Default = false, Callback = function(v) handsEnabled = v; end});
-    WorldTab:CreateToggle({Name = "Hand Rainbow", Default = false, Callback = function(v) handRainbow = v; end});
-    WorldTab:CreateColorPicker({Name = "Hand Color", Default = armSettings.Hand.Color, Callback = function(c) armSettings.Hand.Color = c; end});
-    WorldTab:CreateDropdown({Name = "Hand Materials", Options = materialList, Default = "SmoothPlastic", Callback = function(v) armSettings.Hand.Material = Enum.Material[v]; end});
-    WorldTab:CreateSlider({Name = "Hand Opacity", Min = 0, Max = 10, Default = 0, Callback = function(v) armSettings.Hand.Opacity = v / 10; end});
-    WorldTab:CreateToggle({Name = "Sleeve", Default = false, Callback = function(v) sleeveEnabled = v; end});
-    WorldTab:CreateToggle({Name = "Sleeve Rainbow", Default = false, Callback = function(v) sleeveRainbow = v; end});
-    WorldTab:CreateColorPicker({Name = "Sleeve Color", Default = armSettings.Sleeve.Color, Callback = function(c) armSettings.Sleeve.Color = c; end});
-    WorldTab:CreateDropdown({Name = "Sleeve Materials", Options = materialList, Default = "Fabric", Callback = function(v) armSettings.Sleeve.Material = Enum.Material[v]; end});
-    WorldTab:CreateSlider({Name = "Sleeve Opacity", Min = 0, Max = 10, Default = 0, Callback = function(v) armSettings.Sleeve.Opacity = v / 10; end});
-    HeadsTab:CreateToggle({Name = "Enable Big Heads", Default = false, Callback = function(v) bigHeadsEnabled = v; end});
-    HeadsTab:CreateSlider({Name = "Head Size", Min = 1, Max = 9, Default = 1, Callback = function(v) headSize = v; end});
-    HeadsTab:CreateSection("Head Chams");
-    HeadsTab:CreateToggle({Name = "Enable Head Chams", Default = false, Callback = function(v) headChamsEnabled = v; end});
-    HeadsTab:CreateToggle({Name = "Rainbow Mode", Default = false, Callback = function(v) headRainbowEnabled = v; end});
-    HeadsTab:CreateColorPicker({Name = "Head Color", Default = Color3.fromRGB(0, 255, 0), Callback = function(color) headChamsColor = color; end});
-    HeadsTab:CreateSlider({Name = "Opacity", Min = 0, Max = 100, Default = 50, Callback = function(v) headChamsOpacity = v / 100; end});
-    ChamsTab:CreateToggle({Name = "Enable Chams", Default = false, Callback = function(v) chamsEnabled = v; end});
-    ChamsTab:CreateToggle({Name = "Rainbow Mode", Default = false, Callback = function(v) rainbowEnabled = v; end});
-    ChamsTab:CreateColorPicker({Name = "Chams Color", Default = Color3.fromRGB(255, 0, 0), Callback = function(color) chamsColor = color; end});
-    ChamsTab:CreateSlider({Name = "Opacity", Min = 0, Max = 100, Default = 50, Callback = function(v) chamsOpacity = v / 100; end});
-    CrosshairTab:CreateToggle({Name = "Toggle Crosshair", Default = false, Callback = function(v) crosshairEnabled = v; updateCrosshair(); end});
-    CrosshairTab:CreateToggle({Name = "Rainbow Color", Default = false, Callback = function(v) crosshairRainbow = v; end});
-    CrosshairTab:CreateColorPicker({Name = "Crosshair Color", Default = Color3.fromRGB(255, 255, 255), Callback = function(c) crosshairSettings.color = c; updateCrosshair(); end});
-    CrosshairTab:CreateSlider({Name = "Thickness", Min = 1, Max = 10, Default = 2, Callback = function(v) crosshairSettings.thickness = v; updateCrosshair(); end});
-    CrosshairTab:CreateSlider({Name = "Length", Min = 1, Max = 50, Default = 8, Callback = function(v) crosshairSettings.length = v; updateCrosshair(); end});
-    CrosshairTab:CreateSlider({Name = "Opacity", Min = 0, Max = 100, Default = 100, Callback = function(v) crosshairSettings.opacity = v / 100; updateCrosshair(); end});
+VisualsTab:CreateToggle({
+   Name = "Цветные лохи (Chams)",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.EspChams = Value
+   end,
+})
 
-    -- [ ЦИКЛЫ ОБНОВЛЕНИЯ ]
-    RunService:BindToRenderStep("ZoomLogic", 202, function(deltaTime) if (zoomEnabled and isZooming) then Camera.FieldOfView = zoomDistance; end end);
-    
-    RunService.RenderStepped:Connect(function(dt)
-        -- Аимбот Логика
-        if aimbotEnabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-            local target = getClosestPlayerToCursor();
-            if target then
-                local tPos = Camera:WorldToViewportPoint(target.Position);
-                local mPos = Camera.ViewportSize / 2;
-                mousemoverel((tPos.X - mPos.X) * aimbotSmoothing, (tPos.Y - mPos.Y) * aimbotSmoothing);
-            end
-        end
-        fovCircle.Visible = showFOV;
-        fovCircle.Position = Camera.ViewportSize / 2;
+VisualsTab:CreateToggle({
+   Name = "Погоняла и кликухи (Names)",
+   CurrentValue = false,
+   Callback = function(Value)
+      _G.EspNames = Value
+   end,
+})
 
-        -- Твоя логика Freecam
-        if not isFreecamActive then return; end 
-        local mouseDelta = UserInputService:GetMouseDelta(); yaw = yaw - (mouseDelta.X * sensitivity * 0.05); pitch = pitch - (mouseDelta.Y * sensitivity * 0.05); pitch = math.clamp(pitch, math.rad(-89), math.rad(89)); local rotation = CFrame.Angles(0, yaw, 0) * CFrame.Angles(pitch, 0, 0); local moveDir = Vector3.new(0, 0, 0); if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + Vector3.new(0, 0, -1); end if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir + Vector3.new(0, 0, 1); end if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir + Vector3.new(-1, 0, 0); end if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + Vector3.new(1, 0, 0); end if UserInputService:IsKeyDown(Enum.KeyCode.E) then moveDir = moveDir + Vector3.new(0, 1, 0); end if UserInputService:IsKeyDown(Enum.KeyCode.Q) then moveDir = moveDir + Vector3.new(0, -1, 0); end local currentSpeed = freecamFlySpeed; if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then currentSpeed = currentSpeed * sprintMultiplier; end local worldMoveDir = rotation:VectorToWorldSpace(moveDir); cameraPos = cameraPos + (worldMoveDir * currentSpeed); Camera.CFrame = CFrame.new(cameraPos) * rotation; 
-    end);
+-- Вкладка с приколами
+local MiscTab = Window:CreateTab("🏃 Мутки на раёне", 4483345998)
 
-    RunService.Heartbeat:Connect(function(deltaTime)
-        -- Твоя оригинальная логика Heartbeat (Цвета, Руки, Чамсы, Хитбоксы)
-        if _G.FullBrightEnabled then Lighting.Brightness, Lighting.ClockTime, Lighting.GlobalShadows = 2, 14, false; end 
-        local fpsArms = workspace:FindFirstChild("Const") and workspace.Const:FindFirstChild("Ignore") and workspace.Const.Ignore:FindFirstChild("FPSArms"); if fpsArms then if (handRainbow and handsEnabled) then handHue = (handHue + (deltaTime * 0.2)) % 1; armSettings.Hand.Color = Color3.fromHSV(handHue, 1, 1); end if (sleeveRainbow and sleeveEnabled) then sleeveHue = (sleeveHue + (deltaTime * 0.2)) % 1; armSettings.Sleeve.Color = Color3.fromHSV(sleeveHue, 1, 1); end for _, name in pairs({"RightHand", "LeftHand"}) do local hand = fpsArms:FindFirstChild(name); if (hand and hand:IsA("BasePart") and handsEnabled) then hand.Color, hand.Material, hand.Transparency = armSettings.Hand.Color, armSettings.Hand.Material, armSettings.Hand.Opacity; if hand:IsA("MeshPart") then hand.TextureID = ""; end end end local fakeFolder = fpsArms:FindFirstChild("Fake"); if (fakeFolder and sleeveEnabled) then for _, sleeve in pairs(fakeFolder:GetChildren()) do if (sleeve:IsA("BasePart") and sleeve.Name:find("LowerArm")) then sleeve.Color, sleeve.Material, sleeve.Transparency = armSettings.Sleeve.Color, armSettings.Sleeve.Material, armSettings.Sleeve.Opacity; if sleeve:IsA("MeshPart") then sleeve.TextureID = ""; end end end end end 
-        if crosshairRainbow then crosshairHue = (crosshairHue + (deltaTime * 0.5)) % 1; crosshairSettings.color = Color3.fromHSV(crosshairHue, 1, 1); end 
-        if rainbowEnabled then currentHue = (currentHue + (deltaTime * 0.2)) % 1; chamsColor = Color3.fromHSV(currentHue, 1, 1); end 
-        if headRainbowEnabled then headCurrentHue = (headCurrentHue + (deltaTime * 0.2)) % 1; headChamsColor = Color3.fromHSV(headCurrentHue, 1, 1); end 
-        if (bagRainbowEnabled and bagsEnabled) then bagCurrentHue = (bagCurrentHue + (deltaTime * 0.2)) % 1; local newColor = Color3.fromHSV(bagCurrentHue, 1, 1); BagSettings.FillColor = newColor; for _, hl in pairs(activeBags) do hl.FillColor = newColor; end end 
-        if (crateRainbowEnabled and cratesEnabled) then crateCurrentHue = (crateCurrentHue + (deltaTime * 0.2)) % 1; local newColor = Color3.fromHSV(crateCurrentHue, 1, 1); CrateSettings.FillColor = newColor; for _, hl in pairs(activeCrates) do hl.FillColor = newColor; end end 
-        if (distRainbow and distEnabled) then distHue = (distHue + (deltaTime * 0.2)) % 1; distSettings.TextColor = Color3.fromHSV(distHue, 1, 1); end 
-        if crosshairEnabled then updateCrosshair(); end 
-        for _, model in pairs(CollectionService:GetTagged("ChamsTarget")) do local head = model:FindFirstChild("Head"); if head then head.Size = (bigHeadsEnabled and Vector3.new(headSize, headSize, headSize)) or Vector3.new(1.2, 1.2, 1.2); head.CanCollide = not bigHeadsEnabled; local hHL = head:FindFirstChild("HeadCham"); if headChamsEnabled then if not hHL then hHL = Instance.new("Highlight", head); hHL.Name = "HeadCham"; hHL.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop; end hHL.FillColor = headChamsColor; hHL.FillTransparency = 1 - headChamsOpacity; elseif hHL then hHL:Destroy(); end end local uHL = model:FindFirstChild("UniversalCham"); if chamsEnabled then if not uHL then uHL = Instance.new("Highlight", model); uHL.Name = "UniversalCham"; uHL.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop; end uHL.FillColor = chamsColor; uHL.FillTransparency = 1 - chamsOpacity; elseif uHL then uHL:Destroy(); end end 
-    end);
+MiscTab:CreateButton({
+   Name = "Бег от ментов (Speedhack)",
+   Callback = function()
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 50
+   end,
+})
 
-    -- [ ИНИЦИАЛИЗАЦИЯ ]
-    for _, obj in ipairs(Workspace:GetDescendants()) do if obj:IsA("Model") then applyHighlight(obj); applyCrateCham(obj); checkAndAddOre(obj); if ((obj.Name == "Model") and obj:FindFirstChild("AnimationController")) then createDistanceTag(obj); end end end 
-end
+MiscTab:CreateButton({
+   Name = "Ствол ровно (No Recoil)",
+   Callback = function()
+      -- Тут твоя магия для Trident Survival
+      Rayfield:Notify({Title = "Расклад!", Content = "Отдача пошла нафиг", Duration = 3})
+   end,
+})
+
+-- Выход
+local ConfigTab = Window:CreateTab("⚙️ Свалить с хаты", 4483345998)
+
+ConfigTab:CreateButton({
+   Name = "Выгрузить колбаски (Unload)",
+   Callback = function()
+      Rayfield:Destroy()
+   end,
+})
+
+Rayfield:Notify({
+   Title = "Маза забита!",
+   Content = "Вареные Колбаски Hook запущены. Удачного рейда!",
+   Duration = 5,
+   Image = 4483345998,
+})
